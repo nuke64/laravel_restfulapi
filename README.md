@@ -14,12 +14,15 @@ P.S.
 - С++/GameDev/3d/OpenGL/shaders (6 лет разработки ушло на первые 2 пункта):
 
 https://youtu.be/QP1mftRsPDM
+
 https://youtu.be/fqahqI33LME
+
 https://youtu.be/Zh5AWyLVk_U
 
 - С/++/Embedded/Electronix/IoT 
 
 https://youtu.be/LQeGU3AoPN8
+
 https://youtu.be/6BvQErU1HVc
 
 ;)
