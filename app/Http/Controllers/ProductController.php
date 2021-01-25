@@ -29,9 +29,9 @@ class ProductController extends Controller
             $products = Product::where('id', $id)->get();
         }else if (is_string($arg)){
             if ($arg==='active'){
-                $products = Product::where('active', true)->get();
+                $products = Product::where('is_active', true)->get();
             }elseif($arg==='published'){
-                $products = Product::where('published', true)->get();
+                $products = Product::where('is_published', true)->get();
             }else {
                 $name = $arg;
                 $products = Product::where('name', $name)->orWhere('name', 'like', '%' . $name . '%')->get();
@@ -93,7 +93,7 @@ class ProductController extends Controller
             return $this->error('Min argument is not defined');
         }
         if (is_null($max)){
-            return $this->error('Max argument is not undefined');
+            return $this->error('Max argument is not defined');
         }
         if (!is_numeric($min)){
             return $this->error('Min argument must be numeric types');
