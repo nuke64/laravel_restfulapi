@@ -1,7 +1,7 @@
 ## Реализация функциональности RESTful API на Laravel
 
 Видео работы/тестирования приложения через **Postman** с комментариями:
-https://www.youtube.com/watch?v=VWO70IIvc-Q
+- https://www.youtube.com/watch?v=57KY3PTdWOY
 
 Извиняюсь за не очень качественный звук и разрешение, первый раз стримлю :)
 
