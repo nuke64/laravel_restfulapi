@@ -19,8 +19,8 @@ class CreateProductsTable extends Migration
             $table->string('description', 2048);
             $table->integer('quantity');
             $table->decimal('price', 10,2);
-            $table->boolean('active');
-            $table->boolean('published');
+            $table->boolean('is_active')->default(false);
+            $table->boolean('is_published')->default(false);
             $table->timestamps();
             $table->softDeletes();
         });

@@ -6,19 +6,22 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\Product;
+use Illuminate\Support\Carbon;
 
 class ProductController extends Controller
 {
     const MSG_PRODUCT_NOT_FOUND = 'Product not found';
     const MSG_CATEGORY_NOT_FOUND = 'Category not found';
 
-    public function showAll(){
+    public function index()
+    {
         $products = Product::all();
         $result = $this->postprocess($products);
-        return response()->json($result, 200);
+        return response()->json($this->addStatus($result, 'success'), 200);
     }
 
-    public function show($arg){ // Id,
+    public function show($arg)
+    {
         $products = null;
         if (is_numeric($arg)) {
             $id = $arg;
@@ -38,13 +41,14 @@ class ProductController extends Controller
 
         if (!$products->isEmpty()){
             $result = $this->postprocess($products);
-            return response()->json($result, 200);
+            return response()->json($this->addStatus($result, 'success'), 200);
         }else{
             return $this->error(self::MSG_PRODUCT_NOT_FOUND);
         }
     }
 
-    public function showByCategoryIdOrName($arg){
+    public function showByCategoryIdOrName($arg)
+    {
         if (is_numeric($arg)) {
             $id = $arg;
             $category = Category::find($id);
@@ -52,7 +56,7 @@ class ProductController extends Controller
                 $products = $category->products()->get();
                 if (!$products->isEmpty()) {
                     $result = $this->postprocess($products);
-                    return response()->json($result, 200);
+                    return response()->json($this->addStatus($result, 'success'), 200);
                 } else {
                     return $this->error(self::MSG_PRODUCT_NOT_FOUND);
                 }
@@ -73,7 +77,7 @@ class ProductController extends Controller
                         $result[$p['id']]=$p;
                     }
                 }
-                return response()->json($result, 200);
+                return response()->json($this->addStatus($result, 'success'), 200);
             }else{
                 return $this->error("No category by given name '$name' is found");
             }
@@ -82,29 +86,102 @@ class ProductController extends Controller
         }
     }
 
-    public function showByPrice($min, $max){
-        if (is_numeric($min) && is_numeric($max)) {
-            // swap min/max
-            if ($min > $max){
-                $temp = $min;
-                $min = $max;
-                $max = $temp;
-            }
+    public function showByPrice($min=null, $max=null)
+    {
+        if (is_null($min)){
+            return $this->error('Min argument is not defined');
+        }
+        if (is_null($max)){
+            return $this->error('Max argument is not undefined');
+        }
+        if (!is_numeric($min)){
+            return $this->error('Min argument must be numeric types');
+        }
+        if (!is_numeric($max)) {
+            return $this->error('Max argument must be numeric types');
+        }
 
-            $products = Product::where('price', '>=', $min)->where('price', '<=', $max)->get();
+        // swap min/max
+        if ($min > $max){
+            $temp = $min;
+            $min = $max;
+            $max = $temp;
+        }
 
-            if (!$products->isEmpty()){
-                $result = $this->postprocess($products);
-                return response()->json($result, 200);
-            }else{
-                return $this->error("Products with price between [$min,$max] not found ");
-            }
+        $products = Product::where('price', '>=', $min)->where('price', '<=', $max)->get();
+
+        if (!$products->isEmpty()){
+            $result = $this->postprocess($products);
+            return response()->json($this->addStatus($result, 'success'), 200);
         }else{
-            return $this->error('Min/Max must be numeric types');
+            return $this->error("Products with price between [$min,$max] not found ");
         }
     }
 
-    protected function postprocess($source){
+    public function store(Request $req)
+    {
+        try {
+            //$product = Product::create($req->all()); // We use attribute mutators then use 'save()' instead of 'create()'
+            $product = new Product();
+            $product->fill($req->all());
+            // fill other attributes
+            if (isset($req['is_active'])) {
+                $product->is_active = $req->boolean('is_active');
+            }
+            if (isset($req['is_published'])) {
+                $product->is_published = $req->boolean('is_published');
+            }
+            $product->save();
+
+            $result = array($product);
+            return response()->json($this->addStatus($result, 'success'), 201);
+        }catch (\Throwable $e){
+            return $this->error("Product is not added");
+        }
+    }
+
+    public function update(Request $req, $id /*Product $product*/) // NOTE: I use $id, not Product model class because I don't want get 404 error by updating non-existing product, this error cannot be catched in try/catch scope
+    {
+        try {
+            $product = Product::findOrFail($id);
+            $product->fill($req->all());
+            // fill other attributes
+            if (isset($req['is_active'])) {
+                $product->is_active = $req->boolean('is_active');
+            }
+            if (isset($req['is_published'])) {
+                $product->is_published = $req->boolean('is_published');
+            }
+            $product->save();
+
+            //$product->update($req->all()); // We use attribute mutators then use 'save()' instead of 'create()'
+            $result = array($product);
+            return response()->json($this->addStatus($result, 'success'), 200);
+        }catch (\Throwable $e){
+            return $this->error("Product is not updated");
+        }
+    }
+
+    public function delete(Request $req, $id /*Product $product*/) // NOTE: I use $id, not Product model class because I don't want get 404 error by deleting non-xisting product, this error cannot be catched in try/catch scope
+    {
+        try {
+            $product = Product::findOrFail($id);
+            if ($product->is_active) { // prevent double product 'delete' to save DB load
+                $product->is_active = false;
+                $product->deleted_at = Carbon::now();
+                $product->save();
+            }
+            $result = array($product);
+            return response()->json($this->addStatus($result, 'success'), 200);
+        }catch (\Throwable $e){
+            return $this->error("Product is not deleted");
+        }
+    }
+
+    /* Protected functions */
+
+    protected function postprocess($source)
+    {
         $result = array();
         foreach ($source as $p) {
             $result[$p['id']]=$p;
@@ -114,12 +191,16 @@ class ProductController extends Controller
 
     protected function error($msg)
     {
-        return response()->json(
+        return response()->json($this->addStatus(array(), 'failed', $msg), 404 );
+    }
+
+    protected function addStatus($data, $status, $msg = null)
+    {
+        return array_merge($data,
             [
-                'status' => 'failed',
+                'status' => $status,
                 'message' => $msg
-            ],
-            404
+            ]
         );
     }
 }
