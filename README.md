@@ -1,6 +1,6 @@
 ## Реализация функциональности RESTful API на Laravel
 
-Видео работы/тестирования приложения через Postman с комментариями:
+Видео работы/тестирования приложения через **Postman** с комментариями:
 https://www.youtube.com/watch?v=VWO70IIvc-Q
 
 Извиняюсь за не очень качественный звуки и разрешение, первый раз стримлю :)
@@ -10,17 +10,17 @@ https://www.youtube.com/watch?v=VWO70IIvc-Q
 
 
 
-P.S.
-Я в видео про скиллы говорил, чтобы не быть голословным посмотрите эти видео (если ещё не смотрели):
+*P.S.*
+*Я в видео про скиллы говорил, чтобы не быть голословным посмотрите эти видео (если ещё не смотрели) :*
 
-- С++/GameDev/3d/OpenGL/shaders (6 лет разработки ушло на первые 2 пункта):
-  - https://youtu.be/QP1mftRsPDM
-  - https://youtu.be/fqahqI33LME
-  - https://youtu.be/Zh5AWyLVk_U
+- *С++/GameDev/3d/OpenGL/shaders (6 лет разработки ушло на первые 2 пункта):*
+  - *https://youtu.be/QP1mftRsPDM*
+  - *https://youtu.be/fqahqI33LME*
+  - *https://youtu.be/Zh5AWyLVk_U*
 
-- С/++/Embedded/Electronix/IoT 
-  - https://youtu.be/LQeGU3AoPN8
-  - https://youtu.be/6BvQErU1HVc
+- *С/++/Embedded/Electronix/IoT* 
+  - *https://youtu.be/LQeGU3AoPN8*
+  - *https://youtu.be/6BvQErU1HVc*
 
 ;)
 
