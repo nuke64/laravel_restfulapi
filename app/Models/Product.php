@@ -9,9 +9,11 @@ class Product extends Model
 {
     protected $table = 'products';
 
-    protected $hidden = ['created_at', 'updated_at', 'deleted_at'];
+    protected $hidden = ['created_at', 'updated_at', 'deleted_at', 'categories', 'pivot'];
 
     protected $fillable = ['name', 'description', 'quantity', 'price' ,'active' ,'published'];
+
+    protected $appends = ['category_ids'];
 
     protected $attributes = [
         'is_active' => false,
@@ -27,12 +29,19 @@ class Product extends Model
         return $this->belongsToMany(Category::class,'product_category','product_id', 'category_id');
     }
 
+
+
     public function setIsActiveAttribute($value){
         $this->attributes['is_active'] = $value;
     }
 
     public function setIsPublishedAttribute($value){
         $this->attributes['is_published'] = $value;
+    }
+
+    public function getCategoryIdsAttribute()
+    {
+        return $this->categories->pluck('id');
     }
 
 }

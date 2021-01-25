@@ -11,7 +11,12 @@ Route::get('/products/category/{arg}',          ['uses' => 'App\Http\Controllers
 Route::get('/products/price/{min?}/{max?}',     ['uses' => 'App\Http\Controllers\ProductController@showByPrice']);
 
 Route::post('/products',                        ['uses' => 'App\Http\Controllers\ProductController@store']);
-Route::put('/products/{id}',               ['uses' => 'App\Http\Controllers\ProductController@update']);
-Route::delete('/products/{id}',            ['uses' => 'App\Http\Controllers\ProductController@delete']);
+Route::put('/products/{id}',                    ['uses' => 'App\Http\Controllers\ProductController@update']);
+Route::delete('/products/{id}',                 ['uses' => 'App\Http\Controllers\ProductController@delete']);
 
 // category
+Route::get('/category',                         ['uses' => 'App\Http\Controllers\CategoryController@index']);
+Route::post('/category',                        ['uses' => 'App\Http\Controllers\CategoryController@store']);
+Route::put('/category/{id}',                    ['uses' => 'App\Http\Controllers\CategoryController@update']);
+Route::delete('/category/{id}',                 ['uses' => 'App\Http\Controllers\CategoryController@delete']);
+

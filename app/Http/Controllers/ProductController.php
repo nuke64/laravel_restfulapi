@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ProductCategory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use App\Models\Category;
@@ -131,7 +132,17 @@ class ProductController extends Controller
             if (isset($req['is_published'])) {
                 $product->is_published = $req->boolean('is_published');
             }
-            $product->save();
+
+            if (isset($req['category_ids'])) {
+                $ids = array_unique(json_decode($req['category_ids']));
+                if (count($ids) <2 || count($ids)>10 ){
+                    return $this->error("The count of ID's from 'category_ids' must be >=2 and <=10");
+                }
+                $product->save(); // to get Id for make relation
+                $product->categories()->attach($ids);
+            }else{
+                return $this->error("'category_ids' is not present");
+            }
 
             $result = array($product);
             return response()->json($this->addStatus($result, 'success'), 201);
@@ -152,6 +163,17 @@ class ProductController extends Controller
             if (isset($req['is_published'])) {
                 $product->is_published = $req->boolean('is_published');
             }
+            if (isset($req['category_ids'])) {
+                $ids = array_unique(json_decode($req['category_ids']));
+                if (count($ids) <2 || count($ids)>10 ){
+                    return $this->error("The count of ID's from 'category_ids' must be >=2 and <=10");
+                }
+                $product->categories()->detach(); // detach all
+                $product->categories()->attach($ids);
+            }else{
+                // skip, without changes
+            }
+
             $product->save();
 
             //$product->update($req->all()); // We use attribute mutators then use 'save()' instead of 'create()'
@@ -178,7 +200,9 @@ class ProductController extends Controller
         }
     }
 
-    /* Protected functions */
+    /* Protected functions
+    TODO: refac: move into base class
+     */
 
     protected function postprocess($source)
     {
