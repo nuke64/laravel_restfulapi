@@ -168,8 +168,10 @@ class ProductController extends Controller
                 if (count($ids) <2 || count($ids)>10 ){
                     return $this->error("The count of ID's from 'category_ids' must be >=2 and <=10");
                 }
-                $product->categories()->detach(); // detach all
-                $product->categories()->attach($ids);
+                // update $ids array by existing $ids to avoid data loss by attach/detach error
+                $ids  = Category::whereIn('id', $ids)->pluck('id');
+                // sync
+                $product->categories()->sync($ids);
             }else{
                 // skip, without changes
             }
@@ -180,7 +182,7 @@ class ProductController extends Controller
             $result = array($product);
             return response()->json($this->addStatus($result, 'success'), 200);
         }catch (\Throwable $e){
-            return $this->error("Product is not updated");
+            return $this->error("Product update error");
         }
     }
 
