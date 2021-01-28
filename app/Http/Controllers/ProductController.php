@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\ProductCategory;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\QueryException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\Product;
@@ -30,6 +31,8 @@ class ProductController extends Controller
         }else if (is_string($arg)){
             if ($arg==='active'){
                 $products = Product::where('is_active', true)->get();
+            }elseif($arg==='deleted'){
+                $products = Product::where('is_active', false)->get();
             }elseif($arg==='published'){
                 $products = Product::where('is_published', true)->get();
             }else {
@@ -139,14 +142,18 @@ class ProductController extends Controller
                     return $this->error("The count of ID's from 'category_ids' must be >=2 and <=10");
                 }
                 $product->save(); // to get Id for make relation
-                $product->categories()->attach($ids);
+
+                //$product->categories()->attach($ids); // May cause error when some category.id does not exists! COMMENTED!
+                $ids  = Category::whereIn('id', $ids)->pluck('id');
+                // sync
+                $product->categories()->sync($ids);
             }else{
                 return $this->error("'category_ids' is not present");
             }
 
             $result = array($product);
             return response()->json($this->addStatus($result, 'success'), 201);
-        }catch (\Throwable $e){
+        }catch (\Exception $e){
             return $this->error("Product is not added");
         }
     }
@@ -168,7 +175,7 @@ class ProductController extends Controller
                 if (count($ids) <2 || count($ids)>10 ){
                     return $this->error("The count of ID's from 'category_ids' must be >=2 and <=10");
                 }
-                // update $ids array by existing $ids to avoid data loss by attach/detach error
+                // update $ids array by existing $ids to avoid data loss if attach/detach error occurs
                 $ids  = Category::whereIn('id', $ids)->pluck('id');
                 // sync
                 $product->categories()->sync($ids);
@@ -177,12 +184,15 @@ class ProductController extends Controller
             }
 
             $product->save();
-
             //$product->update($req->all()); // We use attribute mutators then use 'save()' instead of 'create()'
             $result = array($product);
             return response()->json($this->addStatus($result, 'success'), 200);
-        }catch (\Throwable $e){
-            return $this->error("Product update error");
+        }catch (ModelNotFoundException $e){
+            return $this->error("Product update error (not found)");
+        }catch (QueryException $e){
+            return $this->error("Product update error (product found. Other error)");
+        }catch (\Exception $e){
+            return $this->error("Product update error (other error)");
         }
     }
 
@@ -197,15 +207,14 @@ class ProductController extends Controller
             }
             $result = array($product);
             return response()->json($this->addStatus($result, 'success'), 200);
-        }catch (\Throwable $e){
-            return $this->error("Product is not deleted");
+        }catch (ModelNotFoundException $e){
+            return $this->error("Product is not deleted (not found)");
+        }catch (\Exception $e){
+            return $this->error("Product is not deleted (other error)");
         }
     }
 
-    /* Protected functions
-    TODO: refac: move into base class
-     */
-
+    /* Protected functions */
     protected function postprocess($source)
     {
         $result = array();
@@ -215,18 +224,4 @@ class ProductController extends Controller
         return $result;
     }
 
-    protected function error($msg)
-    {
-        return response()->json($this->addStatus(array(), 'failed', $msg), 404 );
-    }
-
-    protected function addStatus($data, $status, $msg = null)
-    {
-        return array_merge($data,
-            [
-                'status' => $status,
-                'message' => $msg
-            ]
-        );
-    }
 }

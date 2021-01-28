@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
@@ -21,7 +22,7 @@ class CategoryController extends Controller
             $category->create($req->all());
 
             return response()->json($this->addStatus(array(), 'success'), 201);
-        }catch (\Throwable $e){
+        }catch (\Exception $e){
             return $this->error("Category is not added");
         }
     }
@@ -33,8 +34,10 @@ class CategoryController extends Controller
             $category->update($req->all());
             $result = array($category);
             return response()->json($this->addStatus($result, 'success'), 200);
-        }catch (\Throwable $e){
-            return $this->error("Category is not updated");
+        }catch (ModelNotFoundException $e){
+            return $this->error("Category update error (not found)");
+        }catch (\Exception $e){
+            return $this->error("Category is not updated (other error)");
         }
     }
 
@@ -53,16 +56,15 @@ class CategoryController extends Controller
             $result = array($category);
             $category->delete();
             return response()->json($this->addStatus($result, 'success'), 200);
-        }catch (\Throwable $e){
-            return $this->error("Category is not deleted");
+        }catch (ModelNotFoundException $e){
+            return $this->error("Category delete error (not found)");
+        }catch (\Exception $e){
+            return $this->error("Category is not deleted (other error)");
         }
     }
 
 
-    /* Protected functions
-    TODO: refac: move into base class
-     */
-
+    /* Protected functions */
     protected function postprocess($source)
     {
         $result = array();
@@ -70,21 +72,6 @@ class CategoryController extends Controller
             $result[$p['id']]=$p;
         }
         return $result;
-    }
-
-    protected function error($msg)
-    {
-        return response()->json($this->addStatus(array(), 'failed', $msg), 404 );
-    }
-
-    protected function addStatus($data, $status, $msg = null)
-    {
-        return array_merge($data,
-            [
-                'status' => $status,
-                'message' => $msg
-            ]
-        );
     }
 
 }
